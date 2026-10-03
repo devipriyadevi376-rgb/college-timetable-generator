@@ -122,23 +122,6 @@ if st.button("Generate Timetable"):
 
     else:
         st.error("No timetable could be generated.")
-if st.button("Generate Timetable"):
-
-    timetable = []
-
-    faculty_used = set()
-
-    for day in days:
-        for slot in slots:
-
-            available = subjects[
-                ~subjects["Faculty"].isin(
-                    [
-                        faculty for d, t, faculty in faculty_used
-                        if d == day and t == slot
-                    ]
-                )
-            ]
 
             if available.empty:
                 subject = random.choice(subjects.to_dict("records"))
