@@ -24,7 +24,7 @@ slots = [
     "3:00-4:00"
 ]
 
-subjects = pd.read_csv("dataset/subjects.csv")
+subjects = pd.read_csv("subjects.csv")
 
 selected_class = st.selectbox(
     "Select Class",
