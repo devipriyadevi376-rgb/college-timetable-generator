@@ -128,8 +128,6 @@ if st.button("Generate Timetable"):
     for _, row in subjects.iterrows():
         for _ in range(int(row["Hours"])):
             subject_list.append(row["Subject"])
-
-    
                 available_rooms = room_data[
                     room_data["Type"] == "Lab"
                 ]
