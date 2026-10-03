@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 st.title("📚 College Timetable Generator")
-st.write("AI Based College Timetable Generator")
+st.write("Enter subject details and generate your college timetable.")
 
 # Days
 days = [
@@ -29,89 +29,154 @@ slots = [
     "3:00-4:00"
 ]
 
-# Load subjects
-subjects = pd.read_csv("subjects.csv")
-
-# Remove unwanted spaces from column names
-subjects.columns = subjects.columns.str.strip()
-
-# Select class
+# Class input
 selected_class = st.selectbox(
     "Select Class",
-    ["II B.Sc AI&DS", "III B.Sc AI&DS"]
+    [
+        "II B.Sc AI&DS",
+        "III B.Sc AI&DS"
+    ]
 )
 
-# Generate button
+# Number of subjects
+num_subjects = st.number_input(
+    "Number of Subjects",
+    min_value=1,
+    max_value=15,
+    value=6,
+    step=1
+)
+
+st.subheader("Enter Subject Details")
+
+subject_data = []
+
+for i in range(int(num_subjects)):
+
+    st.markdown(f"### Subject {i + 1}")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        subject_name = st.text_input(
+            "Subject Name",
+            key=f"subject_{i}"
+        )
+
+    with col2:
+        faculty_name = st.text_input(
+            "Faculty",
+            key=f"faculty_{i}"
+        )
+
+    with col3:
+        hours = st.number_input(
+            "Hours",
+            min_value=1,
+            max_value=10,
+            value=3,
+            key=f"hours_{i}"
+        )
+
+    with col4:
+        subject_type = st.selectbox(
+            "Type",
+            ["Theory", "Lab"],
+            key=f"type_{i}"
+        )
+
+    subject_data.append({
+        "Subject": subject_name,
+        "Faculty": faculty_name,
+        "Hours": hours,
+        "Type": subject_type
+    })
+
+
 if st.button("Generate Timetable"):
 
-    timetable = []
+    # Check empty inputs
+    valid_data = True
 
-    # Create subject list using Hours
-    subject_list = []
+    for item in subject_data:
 
-    for _, row in subjects.iterrows():
+        if item["Subject"].strip() == "":
+            valid_data = False
 
-        hours = int(row["Hours"])
+        if item["Faculty"].strip() == "":
+            valid_data = False
 
-        for _ in range(hours):
+    if not valid_data:
 
-            subject_list.append({
-                "Subject": row["Subject"],
-                "Faculty": row["Faculty"],
-                "Type": row["Type"]
-            })
+        st.error("Please enter Subject Name and Faculty for all subjects.")
 
-    # Fill Monday to Friday
-    index = 0
+    else:
 
-    for day in days:
+        timetable = []
 
-        for slot in slots:
+        # Create subject periods
+        subject_list = []
 
-            if index < len(subject_list):
+        for item in subject_data:
 
-                item = subject_list[index]
+            for _ in range(int(item["Hours"])):
 
-                timetable.append({
-                    "Class": selected_class,
-                    "Day": day,
-                    "Time": slot,
+                subject_list.append({
                     "Subject": item["Subject"],
                     "Faculty": item["Faculty"],
                     "Type": item["Type"]
                 })
 
-                index += 1
+        # Generate timetable
+        index = 0
 
-            else:
+        for day in days:
 
-                timetable.append({
-                    "Class": selected_class,
-                    "Day": day,
-                    "Time": slot,
-                    "Subject": "Free Period",
-                    "Faculty": "-",
-                    "Type": "-"
-                })
+            for slot in slots:
 
-    # Convert to DataFrame
-    timetable_df = pd.DataFrame(timetable)
+                if index < len(subject_list):
 
-    # Display
-    st.subheader("Generated College Timetable")
+                    item = subject_list[index]
 
-    st.dataframe(
-        timetable_df,
-        use_container_width=True,
-        hide_index=True
-    )
+                    timetable.append({
+                        "Class": selected_class,
+                        "Day": day,
+                        "Time": slot,
+                        "Subject": item["Subject"],
+                        "Faculty": item["Faculty"],
+                        "Type": item["Type"]
+                    })
 
-    # Download
-    csv = timetable_df.to_csv(index=False).encode("utf-8")
+                    index += 1
 
-    st.download_button(
-        "Download Timetable CSV",
-        csv,
-        "college_timetable.csv",
-        "text/csv"
-    )
+                else:
+
+                    timetable.append({
+                        "Class": selected_class,
+                        "Day": day,
+                        "Time": slot,
+                        "Subject": "Free Period",
+                        "Faculty": "-",
+                        "Type": "-"
+                    })
+
+        # Convert to DataFrame
+        timetable_df = pd.DataFrame(timetable)
+
+        st.subheader("Generated College Timetable")
+
+        st.dataframe(
+            timetable_df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        # Download
+        csv = timetable_df.to_csv(index=False).encode("utf-8")
+
+        st.download_button(
+            "Download Timetable CSV",
+            csv,
+            "college_timetable.csv",
+            "text/csv"
+        )
