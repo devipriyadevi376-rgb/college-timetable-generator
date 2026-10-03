@@ -59,7 +59,7 @@ if st.button("Generate Timetable"):
             faculty_used.add(
                 (day, slot, subject["Faculty"])
             )
-            room_data = pd.read_csv("dataset/rooms.csv")
+            room_data = pd.read_csv("rooms.csv")
 
             if subject["Type"] == "Lab":
                 available_rooms = room_data[
