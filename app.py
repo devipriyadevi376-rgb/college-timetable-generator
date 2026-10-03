@@ -73,6 +73,7 @@ if st.button("Generate Timetable"):
             room = random.choice(
                 available_rooms["Room"].tolist()
             )
+            timetable = []
             timetable.append({
                 "Day": day,
                 "Time": slot,
