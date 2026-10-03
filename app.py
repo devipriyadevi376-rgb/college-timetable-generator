@@ -28,8 +28,52 @@ subjects = pd.read_csv("subjects.csv")
 
 selected_class = st.selectbox(
     "Select Class",
-    ["II B.Sc AI&DS", "III B.Sc AI&DS"]
+  ["II B.Sc AI&DS", "III B.Sc AI&DS"]
 )
+if st.button("Generate Timetable"):
+
+    timetable = []
+
+    subjects.columns = subjects.columns.str.strip()
+
+    subject_list = []
+
+    for _, row in subjects.iterrows():
+        for _ in range(int(row["Hours"])):
+            subject_list.append({
+                "Subject": row["Subject"],
+                "Faculty": row["Faculty"],
+                "Type": row["Type"]
+            })
+
+    index = 0
+
+    for day in days:
+        for slot in slots:
+
+            if index < len(subject_list):
+
+                item = subject_list[index]
+
+                timetable.append({
+                    "Class": selected_class,
+                    "Day": day,
+                    "Time": slot,
+                    "Subject": item["Subject"],
+                    "Faculty": item["Faculty"],
+                    "Type": item["Type"]
+                })
+
+                index += 1
+
+    timetable_df = pd.DataFrame(timetable)
+
+    st.subheader("Generated College Timetable")
+
+    st.dataframe(
+        timetable_df,
+        use_container_width=True
+    )
 if st.button("Generate Timetable"):
 
     timetable = []
