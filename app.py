@@ -30,7 +30,54 @@ selected_class = st.selectbox(
     "Select Class",
     ["II B.Sc AI&DS", "III B.Sc AI&DS"]
 )
+if st.button("Generate Timetable"):
 
+    timetable = []
+
+    # Subjects-ஐ weekly hours அடிப்படையில் repeat செய்கிறோம்
+    subject_list = []
+
+    for _, row in subjects.iterrows():
+        for _ in range(int(row["Hours"])):
+            subject_list.append(row["Subject"])
+
+    # Monday to Friday + all time slots
+    index = 0
+
+    for day in days:
+        for slot in slots:
+
+            if index < len(subject_list):
+                subject_name = subject_list[index]
+
+                teacher_name = subjects.loc[
+                    subjects["Subject"] == subject_name,
+                    "Teacher"
+                ].iloc[0]
+
+                timetable.append({
+                    "Class": selected_class,
+                    "Day": day,
+                    "Time": slot,
+                    "Subject": subject_name,
+                    "Teacher": teacher_name
+                })
+
+                index += 1
+
+    # Display timetable
+    if timetable:
+        timetable_df = pd.DataFrame(timetable)
+
+        st.subheader("Generated College Timetable")
+
+        st.dataframe(
+            timetable_df,
+            use_container_width=True
+        )
+
+    else:
+        st.error("No timetable could be generated.")
 if st.button("Generate Timetable"):
 
     timetable = []
