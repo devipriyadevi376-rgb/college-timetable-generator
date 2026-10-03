@@ -1,20 +1,25 @@
 import streamlit as st
 import pandas as pd
-import random
-import joblib
 
 st.set_page_config(
     page_title="College Timetable Generator",
-    page_icon="📅",
+    page_icon="📚",
     layout="wide"
 )
 
-st.title("🎓 AI-Based College Timetable Generator")
+st.title("📚 College Timetable Generator")
+st.write("AI Based College Timetable Generator")
 
-st.write("Generate a weekly college timetable automatically.")
+# Days
+days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday"
+]
 
-days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-
+# Time slots
 slots = [
     "9:00-10:00",
     "10:00-11:00",
@@ -24,31 +29,43 @@ slots = [
     "3:00-4:00"
 ]
 
+# Load subjects
 subjects = pd.read_csv("subjects.csv")
 
+# Remove unwanted spaces from column names
+subjects.columns = subjects.columns.str.strip()
+
+# Select class
 selected_class = st.selectbox(
     "Select Class",
-  ["II B.Sc AI&DS", "III B.Sc AI&DS"]
+    ["II B.Sc AI&DS", "III B.Sc AI&DS"]
 )
+
+# Generate button
 if st.button("Generate Timetable"):
 
     timetable = []
 
-    subjects.columns = subjects.columns.str.strip()
-
+    # Create subject list using Hours
     subject_list = []
 
     for _, row in subjects.iterrows():
-        for _ in range(int(row["Hours"])):
+
+        hours = int(row["Hours"])
+
+        for _ in range(hours):
+
             subject_list.append({
                 "Subject": row["Subject"],
                 "Faculty": row["Faculty"],
                 "Type": row["Type"]
             })
 
+    # Fill Monday to Friday
     index = 0
 
     for day in days:
+
         for slot in slots:
 
             if index < len(subject_list):
@@ -66,200 +83,35 @@ if st.button("Generate Timetable"):
 
                 index += 1
 
-    timetable_df = pd.DataFrame(timetable)
-
-    st.subheader("Generated College Timetable")
-
-    st.dataframe(
-        timetable_df,
-        use_container_width=True
-    )
-if st.button("Generate Timetable"):
-
-    timetable = []
-
-    subjects.columns = subjects.columns.str.strip()
-
-    subject_list = []
-
-    for _, row in subjects.iterrows():
-        for _ in range(int(row["Hours"])):
-            subject_list.append({
-                "Subject": row["Subject"],
-                "Faculty": row["Faculty"],
-                "Type": row["Type"]
-            })
-
-    index = 0
-
-    for day in days:
-        for slot in slots:
-
-            if index < len(subject_list):
-
-                item = subject_list[index]
-
-                timetable.append({
-                    "Class": selected_class,
-                    "Day": day,
-                    "Time": slot,
-                    "Subject": item["Subject"],
-                    "Faculty": item["Faculty"],
-                    "Type": item["Type"]
-                })
-
-                index += 1
-
-    timetable_df = pd.DataFrame(timetable)
-
-    st.subheader("Generated College Timetable")
-
-    st.dataframe(
-        timetable_df,
-        use_container_width=True
-    )
-if st.button("Generate Timetable"):
-
-    timetable = []
-
-    # Subjects-ஐ weekly hours அடிப்படையில் repeat செய்கிறோம்
-    subject_list = []
-
-    for _, row in subjects.iterrows():
-        for _ in range(int(row["Hours"])):
-            subject_list.append(row["Subject"])
-                available_rooms = room_data[
-                    room_data["Type"] == "Lab"
-                ]
             else:
-                available_rooms = room_data[
-                    room_data["Type"] == "Classroom"
-                ]
 
-            room = random.choice(
-                available_rooms["Room"].tolist()
-            )
-            timetable = []
-            timetable.append({
-                "Day": day,
-                "Time": slot,
-                "Subject": subject["Subject"],
-                "Faculty": subject["Faculty"],
-                "Room": room,
-                "Type": subject["Type"]
-            })
-df = pd.DataFrame(timetable)
+                timetable.append({
+                    "Class": selected_class,
+                    "Day": day,
+                    "Time": slot,
+                    "Subject": "Free Period",
+                    "Faculty": "-",
+                    "Type": "-"
+                })
 
-st.subheader(f"Weekly Timetable - {selected_class}")
+    # Convert to DataFrame
+    timetable_df = pd.DataFrame(timetable)
 
-pivot = df.pivot(
-    index="Time",
-    columns="Day",
-    values="Subject"
-)
+    # Display
+    st.subheader("Generated College Timetable")
 
-st.subheader("Weekly Timetable")
-
-st.dataframe(
-    pivot,
-    use_container_width=True
-)
-
-st.subheader("Room Allocation Details")
-
-st.dataframe(
-    df[["Day", "Time", "Subject", "Faculty", "Room"]],
-    use_container_width=True
-)
-st.subheader("Faculty Conflict Checking")
-st.subheader("Room Conflict Checking")
-
-room_conflicts = df[
-    df.duplicated(
-        subset=["Day", "Time", "Room"],
-        keep=False
+    st.dataframe(
+        timetable_df,
+        use_container_width=True,
+        hide_index=True
     )
-]
-st.subheader("Subject-wise Period Summary")
 
-subject_summary = df["Subject"].value_counts().reset_index()
+    # Download
+    csv = timetable_df.to_csv(index=False).encode("utf-8")
 
-subject_summary.columns = ["Subject", "Total Periods"]
-
-st.dataframe(
-    subject_summary,
-    use_container_width=True
-)
-st.subheader("ML-Based Timetable Quality Prediction")
-
-import joblib
-
-model = joblib.load("timetable_model.pkl")
-
-faculty_conflicts = df[
-    df.duplicated(
-        subset=["Day", "Time", "Faculty"],
-        keep=False
-    )
-]
-
-room_conflicts = df[
-    df.duplicated(
-        subset=["Day", "Time", "Room"],
-        keep=False
-    )
-]
-
-faculty_conflict_count = len(faculty_conflicts)
-
-room_conflict_count = len(room_conflicts)
-
-total_conflicts = (
-    faculty_conflict_count + room_conflict_count
-)
-room_conflict_count = len(room_conflicts)
-
-total_conflicts = (
-    faculty_conflict_count + room_conflict_count
-)
-
-faculty_load = df["Faculty"].value_counts().max()
-room_usage = df["Room"].value_counts().max()
-
-prediction = model.predict([[
-    faculty_load,
-    room_usage,
-    total_conflicts
-]])
-
-st.write("Total Conflicts:", total_conflicts)
-
-st.write("Predicted Timetable Quality:", prediction[0])
-
-if room_conflicts.empty:
-    st.success("No Room Conflicts Found!")
-else:
-    st.warning("Room Conflicts Detected!")
-    st.dataframe(room_conflicts)
-
-faculty_conflicts = df[
-    df.duplicated(
-        subset=["Day", "Time", "Faculty"],
-        keep=False
-    )
-]
-
-if faculty_conflicts.empty:
-    st.success("No Faculty Conflicts Found!")
-else:
-    st.warning("Faculty Conflicts Detected!")
-    st.dataframe(faculty_conflicts)
-
-csv = df.to_csv(index=False).encode("utf-8")
-
-st.download_button(
-        label="Download Timetable CSV",
-        data=csv,
-        file_name="college_timetable.csv",
-        mime="text/csv"
+    st.download_button(
+        "Download Timetable CSV",
+        csv,
+        "college_timetable.csv",
+        "text/csv"
     )
